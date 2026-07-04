@@ -136,8 +136,8 @@ public class UserService {
 
       // 3. 토큰 생성
       accessToken = (storeId != null)
-          ? jwtUtil.createAccessToken(user.getLoginId(), roles, storeId, ownerId)
-          : jwtUtil.createAccessToken(user.getLoginId(), roles); // 오버로드 버전 필요
+          ? jwtUtil.createAccessToken(user.getLoginId(), user.getId(), roles, storeId, ownerId)
+          : jwtUtil.createAccessToken(user.getLoginId(), user.getId(), roles); // 오버로드 버전 필요
 
       String refreshToken = jwtUtil.createRefreshToken(user.getLoginId());
 

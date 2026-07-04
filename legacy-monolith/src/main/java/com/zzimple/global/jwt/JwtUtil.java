@@ -39,13 +39,15 @@ public class JwtUtil {
   }
 
   // 일반 사용자용 storeId 없는 버전
-  public String createAccessToken(String loginId, List<String> roles) {
+  // userId 클레임: MSA 게이트웨이가 DB 조회 없이 X-User-Id 헤더를 만들 수 있도록 포함한다
+  public String createAccessToken(String loginId, Long userId, List<String> roles) {
     Date now = new Date();
     Date expireTime = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
     Key key = getSigningKey();
 
     return Jwts.builder()
         .setSubject(loginId)
+        .claim("userId", userId)
         .claim("roles", roles)
         .setIssuedAt(now)
         .setExpiration(expireTime)
@@ -54,13 +56,14 @@ public class JwtUtil {
   }
 
   // Access Token 발급 부분 - 사장
-  public String createAccessToken(String loginId, List<String> roles, Long storeId, Long ownerId) {
+  public String createAccessToken(String loginId, Long userId, List<String> roles, Long storeId, Long ownerId) {
     Date now = new Date();
     Date expireTime = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
     Key key = getSigningKey();
 
     return Jwts.builder()
         .setSubject(loginId)
+        .claim("userId", userId)
         .claim("roles", roles)
         .claim("storeId", storeId)
         .claim("ownerId", ownerId)

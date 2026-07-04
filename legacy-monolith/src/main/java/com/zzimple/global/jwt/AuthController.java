@@ -135,12 +135,12 @@ public class AuthController {
         Long storeId = store.getId();         // 가게 ID
         Long ownerId = store.getOwnerId();    // 사장님 PK
         newAccessToken = jwtUtil.createAccessToken(
-            user.getLoginId(), roles, storeId, ownerId
+            user.getLoginId(), user.getId(), roles, storeId, ownerId
         );
 
 //        newAccessToken = jwtUtil.createAccessToken(loginId, roles, store.getId(), owner.getId() );
       } else {
-        newAccessToken = jwtUtil.createAccessToken(loginId, roles); // 고침
+        newAccessToken = jwtUtil.createAccessToken(loginId, user.getId(), roles); // 고침
       }
 
       // ✅ accessToken 쿠키 설정

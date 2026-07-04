@@ -8,14 +8,31 @@ spring:
     import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
   cloud:
     gateway:
-      # 서비스 라우트는 각 서비스가 추출되는 단계에서 추가된다
       routes:
         - id: integration-service
           uri: lb://integration-service
           predicates:
             - Path=/juso/**,/gpt/**,/kakao-navi/**
+        - id: staff-service
+          uri: lb://staff-service
+          predicates:
+            - Path=/staff/**,/owner/schedule/**
+        # strangler: 아직 추출되지 않은 나머지 경로는 legacy 모놀리스로 전달
+        - id: legacy-monolith
+          uri: ${LEGACY_MONOLITH_URL:http://localhost:8081}
+          predicates:
+            - Path=/**
 
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+jwt:
+  # 게이트웨이는 JWT '검증'만 한다. 발급은 auth-service(현재는 legacy)만 수행.
+  # 실제 키는 Config Server / 환경변수로 주입
+  secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-local-dev-secret-key}
+
+gateway:
+  # JWT 검증을 건너뛰는 공개 경로 (모놀리스 SecurityConfig의 permitAll 목록 승계, 콤마 구분)
+  public-paths: /auth/**,/oauth2/**,/users/**,/owner/signup,/owner/business-status/**,/juso/**,/swagger-ui/**,/v3/api-docs/**

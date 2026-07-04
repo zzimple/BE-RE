@@ -1,0 +1,47 @@
+# 찜플 MSA 로컬 오케스트레이션
+# 단계적으로 서비스가 추가된다 (Phase 0: 인프라 3종만)
+services:
+  discovery-server:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: discovery-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  config-server:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: config-server
+    environment:
+      CONFIG_REPO_ROOT: /config-repo
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+    volumes:
+      - ./infra/config-repo:/config-repo:ro
+    ports:
+      - "8888:8888"
+    depends_on:
+      - discovery-server
+
+  gateway:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: gateway
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery-server
+      - config-server

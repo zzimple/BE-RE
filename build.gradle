@@ -1,81 +1,51 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.4.5'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.4.5' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'com'
-version = '0.0.1-SNAPSHOT'
+allprojects {
+    group = 'com.zzimple'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    repositories {
+        mavenCentral()
+    }
 }
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
 
-repositories {
-	mavenCentral()
-}
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
 
-	// swagger
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.1'
+    dependencyManagement {
+        imports {
+            mavenBom SpringBootPlugin.BOM_COORDINATES
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2024.0.1"
+        }
+    }
 
-	// spring security
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	testImplementation 'org.springframework.security:spring-security-test'
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
 
-	// redis
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-
-	// sms 인증
-	implementation 'net.nurigo:sdk:4.2.7'
-
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-	// jwt
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.3'
-
-	implementation 'com.google.cloud:google-cloud-vision:3.26.0'
-
-	implementation "org.locationtech.proj4j:proj4j:1.1.0"
-
-	implementation 'com.google.protobuf:protobuf-java:3.25.3'
-
-	implementation 'io.netty:netty-all:4.1.109.Final' // 또는 호환 가능한 최신 버전
-
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-jar {
-	enabled = false
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }

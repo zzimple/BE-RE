@@ -1,0 +1,4 @@
+# 테스트용 최소 공용 설정
+logging:
+  level:
+    root: INFO

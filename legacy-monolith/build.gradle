@@ -1,0 +1,48 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.1'
+
+    // spring security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // sms 인증
+    implementation 'net.nurigo:sdk:4.2.7'
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.3'
+
+    implementation 'com.google.cloud:google-cloud-vision:3.26.0'
+
+    implementation "org.locationtech.proj4j:proj4j:1.1.0"
+
+    implementation 'com.google.protobuf:protobuf-java:3.25.3'
+
+    implementation 'io.netty:netty-all:4.1.109.Final'
+}
+
+jar {
+    enabled = false
+}

@@ -14,7 +14,6 @@ import com.zzimple.owner.dto.response.WeeklySalesSimpleResponse;
 import com.zzimple.owner.exception.BusinessErrorCode;
 import com.zzimple.global.exception.CustomException;
 import com.zzimple.global.exception.GlobalErrorCode;
-import com.zzimple.global.sms.service.SmsService;
 import com.zzimple.owner.dto.request.OwnerLoginIdCheckRequest;
 import com.zzimple.owner.dto.request.OwnerSignUpRequest;
 import com.zzimple.owner.dto.response.OwnerLoginIdCheckResponse;
@@ -57,7 +56,6 @@ public class OwnerService {
   private final EstimateRepository estimateRepository;
   private final EstimateOwnerResponseRepository estimateOwnerResponseRepository;
 
-  private final SmsService smsService;
 
   public OwnerLoginIdCheckResponse checkLoginIdDuplicate(OwnerLoginIdCheckRequest request) {
     // 로그인 아이디(이메일) 존재 여부 확인
@@ -71,9 +69,6 @@ public class OwnerService {
 
   @Transactional
   public OwnerSignUpResponse registerOwner(OwnerSignUpRequest request) {
-
-    // 0. 휴대폰 인증 검사
-    smsService.verifyPhoneCertified(request.getPhoneNumber());
 
     // 1. 중복 아이디
     if (ownerRepository.findByBusinessNumber(request.getB_no()).isPresent()) {

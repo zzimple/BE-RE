@@ -70,15 +70,13 @@ public class SecurityConfig {
                 // 인증 관련 요청 허용
                 .requestMatchers("/auth/**", "/oauth2/**").permitAll()
 
-                .requestMatchers("/owner/**", "/users/**", "/sms/**").permitAll()
+                .requestMatchers("/owner/**", "/users/**").permitAll()
 
 
                 // 개발 할 때만 풀어두기
 //                .requestMatchers("/estimates/draft/**").permitAll()
 
-                .requestMatchers("/juso/**", "/api/vision/**", "/kakao-navi/**", "gpt/***").permitAll()
-
-
+                
                 // 직원 전용 API
                 .requestMatchers("/staff/request", "/staff/time-off/request", "/staff/time-off/me", "/staff/profile", "staff/time-off/me/calendar", "staff/time-off/calendar").hasRole("STAFF")
 

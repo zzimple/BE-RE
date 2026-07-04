@@ -45,3 +45,16 @@ services:
     depends_on:
       - discovery-server
       - config-server
+
+  integration-service:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: integration-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+    depends_on:
+      - discovery-server
+      - config-server

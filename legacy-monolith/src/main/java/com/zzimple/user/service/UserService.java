@@ -11,7 +11,6 @@ import com.zzimple.user.dto.response.ProfileResponse;
 import com.zzimple.user.enums.UserRole;
 import com.zzimple.user.exception.UserErrorCode;
 import com.zzimple.global.jwt.JwtUtil;
-import com.zzimple.global.sms.service.SmsService;
 import com.zzimple.user.dto.request.UserLoginIdCheckRequest;
 import com.zzimple.user.dto.request.LoginRequest;
 import com.zzimple.user.dto.request.UserSignUpRequest;
@@ -47,7 +46,6 @@ public class UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
-  private final SmsService smsService;
   private final OwnerRepository ownerRepository;
   private final StoreRepository storeRepository;
 
@@ -63,9 +61,6 @@ public class UserService {
 
   @Transactional
   public SignUpResponse registerUser(UserSignUpRequest request) {
-
-    // 0. 휴대폰 인증 검사
-    smsService.verifyPhoneCertified(request.getPhoneNumber());
 
     // 1. 중복 회원 검사
     if (userRepository.findByLoginId(request.getLoginId()).isPresent()) {
@@ -101,9 +96,6 @@ public class UserService {
       userRepository.save(user);
 
       log.info("[회원가입 성공] ID: {}, 이름: {}", user.getLoginId(), user.getUserName());
-
-      // redis 키 지우기
-      smsService.removeCertifiedPhoneKey(request.getPhoneNumber());
 
       return SignUpResponse.builder()
           .isSuccess(true)

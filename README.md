@@ -36,6 +36,42 @@ Spring Boot 백엔드와 React 프론트엔드를 연동한 **이사 플랫폼 �
 
 💡 이사 산업의 아날로그한 흐름을 디지털 방식으로 전환하는 데 초점
 
+<br>
+
+## 🧩 MSA 아키텍처 (모놀리스 → 마이크로서비스 전환)
+
+단일 Spring Boot 모놀리스를 **strangler fig 패턴**으로 5개 도메인 서비스 + 인프라 3종으로 점진 분리했습니다.
+
+```
+                        ┌──────────────┐
+   Client ───────────▶  │   Gateway    │  JWT 검증 → X-User-* 헤더 주입 (위조 헤더 제거)
+                        │    :8080     │
+                        └──────┬───────┘        ┌ Eureka(:8761) 서비스 디스커버리
+        ┌──────────┬───────────┼──────────┬─────┤ Config Server(:8888) 중앙 설정
+        ▼          ▼           ▼          ▼     ▼
+   ┌─────────┐┌─────────┐┌─────────┐┌─────────┐┌─────────────┐
+   │  auth   ││  owner  ││  staff  ││estimate ││ integration │
+   │  :8084  ││  :8082  ││  :8083  ││  :8086  ││    :8085    │
+   │ JWT발급 ││사장/매장││직원/배정││  견적   ││ 외부API 프록시│
+   └────┬────┘└────┬────┘└────┬────┘└────┬────┘└─────────────┘
+     MySQL      MySQL      MySQL      MySQL      (stateless)
+    auth_db    owner_db   staff_db  estimate_db   Kakao/GPT/주소
+                Redis(0)             Redis(1)
+```
+
+**서비스 간 통신 (하이브리드)**
+- **동기 Feign + Eureka**: "지금 이 순간의 값"이 필요한 호출 — 로그인 시 storeId/ownerId 클레임 해석, 직원 배정 시 견적 확정 상태 확인 등
+- **비동기 Kafka 이벤트 + CQRS read model**: 자주 읽히고 드물게 바뀌는 표시용 데이터
+
+| 토픽 | 발행 | 소비 | 용도 |
+|---|---|---|---|
+| `estimate.confirmed.v1` | estimate | owner, staff | 매출 read model 적재, 배정 준비 |
+| `estimate.status-changed.v1` | estimate | owner | 매출 완료/진행 구분 |
+| `owner.store.upserted.v1` | owner | estimate | store_view (목록 매장명 N+1 제거) |
+| `user.updated.v1` | auth | estimate | user_view (목록 사용자명 N+1 제거) |
+
+**실행**: `docker compose up` 하나로 전체 스택 기동 (Kafka는 KRaft 모드, 서비스별 독립 MySQL, 외부 노출은 Gateway 뿐)
+
 <br>  
                                                                                                                                                         
 ## 🛠 기술 스택
@@ -43,7 +79,8 @@ Spring Boot 백엔드와 React 프론트엔드를 연동한 **이사 플랫폼 �
 | **Category**  | **Tech** |
 |---------------|----------|
 | **Language**  | <img src="https://img.shields.io/badge/Java-007396?style=flat-square&logo=java&logoColor=white"> |
-| **Framework** | <img src="https://img.shields.io/badge/Spring-6DB33F?style=flat-square&logo=spring&logoColor=white"> |
+| **Framework** | <img src="https://img.shields.io/badge/Spring-6DB33F?style=flat-square&logo=spring&logoColor=white"> <img src="https://img.shields.io/badge/Spring%20Cloud-6DB33F?style=flat-square&logo=spring&logoColor=white"> |
+| **MSA**       | Spring Cloud Gateway · Eureka · Config Server · OpenFeign · <img src="https://img.shields.io/badge/Apache%20Kafka-231F20?style=flat-square&logo=apachekafka&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white"> |
 | **Security**  | <img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white"> <img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white"> |
 | **Database**  | <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white"> <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white"> |
 | **CI/CD**     | <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white"> |

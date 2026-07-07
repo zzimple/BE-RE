@@ -1,0 +1,139 @@
+name: zzimple MSA CI/CD
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  # 어떤 모듈이 변경됐는지 감지 (변경된 서비스만 빌드/배포)
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      discovery-server: ${{ steps.filter.outputs.discovery-server }}
+      config-server: ${{ steps.filter.outputs.config-server }}
+      auth-service: ${{ steps.filter.outputs.auth-service }}
+      owner-service: ${{ steps.filter.outputs.owner-service }}
+      staff-service: ${{ steps.filter.outputs.staff-service }}
+      estimate-service: ${{ steps.filter.outputs.estimate-service }}
+      integration-service: ${{ steps.filter.outputs.integration-service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'common/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'infra/**'
+            gateway:
+              - 'gateway/**'
+            discovery-server:
+              - 'discovery-server/**'
+            config-server:
+              - 'config-server/**'
+            auth-service:
+              - 'auth-service/**'
+            owner-service:
+              - 'owner-service/**'
+            staff-service:
+              - 'staff-service/**'
+            estimate-service:
+              - 'estimate-service/**'
+            integration-service:
+              - 'integration-service/**'
+
+  # 전체 테스트 (common 계약 변경이 다른 서비스를 깨지 않는지 항상 검증)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle (캐시 포함)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run all module tests
+        run: ./gradlew test --stacktrace
+
+  # 변경된 서비스만 bootJar 빌드 + 아티팩트 업로드
+  build:
+    needs: [detect-changes, test]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - gateway
+          - discovery-server
+          - config-server
+          - auth-service
+          - owner-service
+          - staff-service
+          - estimate-service
+          - integration-service
+    steps:
+      - name: Skip unchanged service
+        if: needs.detect-changes.outputs[matrix.service] != 'true' && needs.detect-changes.outputs.shared != 'true'
+        run: echo "${{ matrix.service }} 변경 없음 - 빌드 생략"
+
+      - uses: actions/checkout@v4
+        if: needs.detect-changes.outputs[matrix.service] == 'true' || needs.detect-changes.outputs.shared == 'true'
+
+      - name: Set up JDK 17
+        if: needs.detect-changes.outputs[matrix.service] == 'true' || needs.detect-changes.outputs.shared == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle (캐시 포함)
+        if: needs.detect-changes.outputs[matrix.service] == 'true' || needs.detect-changes.outputs.shared == 'true'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build bootJar
+        if: needs.detect-changes.outputs[matrix.service] == 'true' || needs.detect-changes.outputs.shared == 'true'
+        run: |
+          chmod +x gradlew
+          ./gradlew :${{ matrix.service }}:bootJar --stacktrace
+
+      - name: Upload artifact
+        if: needs.detect-changes.outputs[matrix.service] == 'true' || needs.detect-changes.outputs.shared == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}
+          path: ${{ matrix.service }}/build/libs/*.jar
+
+  # ─────────────────────────────────────────────────────────────
+  # 배포(Deploy)는 의도적으로 비워두었다.
+  #
+  # 모놀리스 시절에는 단일 jar를 KT Cloud VM에 SCP 후 재시작했지만,
+  # MSA 전환 후에는 배포 대상 결정이 필요하다:
+  #
+  #  옵션 A) 기존 KT Cloud 단일 VM에 docker compose로 전체 스택 배포
+  #     - VM에 Docker 설치 후: scp docker-compose.yml + `docker compose up -d --build`
+  #     - 장점: 지금의 로컬 오케스트레이션을 그대로 사용 / 단점: 단일 장애점
+  #
+  #  옵션 B) VM에 서비스별 jar 8개를 각각 프로세스로 기동 (systemd 권장)
+  #     - MySQL x4, Redis, Kafka를 VM에 직접 설치해야 함 - 관리 부담 큼
+  #
+  #  옵션 C) 클라우드 컨테이너 서비스(EKS/ECS/NKS 등)로 이전
+  #     - 가장 실무적이지만 비용/범위 초과
+  #
+  # 운영 방식이 크게 바뀌는 결정이므로 저장소 주인이 선택 후
+  # 이 자리에 deploy job을 추가한다. (권장: 옵션 A)
+  # ─────────────────────────────────────────────────────────────

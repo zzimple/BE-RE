@@ -96,7 +96,9 @@ public class JwtUtil {
     try {
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
       return true;
-    } catch (SecurityException | MalformedJwtException e) {
+    } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+      // jjwt의 SignatureException은 java.lang.SecurityException이 아니라
+      // io.jsonwebtoken.security.SecurityException을 상속한다 (레거시 버그 수정)
       log.info("잘못된 JWT 서명입니다.");
     } catch (ExpiredJwtException e) {
       log.info("만료된 JWT 토큰입니다.");

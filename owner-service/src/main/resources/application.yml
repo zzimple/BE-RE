@@ -37,10 +37,10 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
 
-# strangler 단계: user 도메인은 아직 legacy 소유 (Phase 4에서 auth-service로 전환)
+# Phase 4: auth-service 추출 완료 - url을 비워 Eureka(lb)로 전환
 clients:
   auth-service:
-    url: ${LEGACY_MONOLITH_URL:http://localhost:8081}
+    url: ${AUTH_SERVICE_URL:}
 
 # 공공데이터 사업자 상태 조회 API 키 (Config Server/환경변수 주입)
 api:

@@ -9,10 +9,11 @@ spring:
       host: ${REDIS_HOST:redis}
       database: 0
 
-# strangler: user 도메인은 Phase 4 전까지 legacy 소유
+# Phase 4: auth-service 추출 완료 - Eureka(lb)로 전환
 clients:
   auth-service:
-    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}
+    url: ""
+
 
 # 공공데이터 사업자 상태 조회 API 키
 api:

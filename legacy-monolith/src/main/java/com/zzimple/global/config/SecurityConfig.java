@@ -1,6 +1,6 @@
 package com.zzimple.global.config;
 
-import com.zzimple.global.jwt.JwtRequestFilter;
+import com.zzimple.common.security.GatewayHeaderAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +36,12 @@ public class SecurityConfig {
   private String swaggerPassword;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
-      JwtRequestFilter jwtRequestFilter) throws Exception {
+  public GatewayHeaderAuthenticationFilter gatewayHeaderAuthenticationFilter() {
+    return new GatewayHeaderAuthenticationFilter();
+  }
+
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     httpSecurity
         // CORS 설정
         .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
@@ -52,8 +56,9 @@ public class SecurityConfig {
 
         .httpBasic(Customizer.withDefaults())
 
-        // JWT 인증 필터를 Spring Security 필터 체인에 등록 (UsernamePasswordAuthenticationFilter 앞에 실행)
-        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+        // MSA 전환: JWT 검증은 게이트웨이가 수행하고,
+        // legacy는 게이트웨이가 주입한 X-User-* 헤더(공유 필터)만 신뢰한다
+        .addFilterBefore(gatewayHeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
         // 권한 설정
         .authorizeHttpRequests(auth -> auth

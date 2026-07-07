@@ -31,8 +31,7 @@ import com.zzimple.estimate.owner.repository.EstimateExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.estimate.owner.repository.MoveItemExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.StorePriceSettingRepository;
-import com.zzimple.user.entity.User;
-import com.zzimple.user.repository.UserRepository;
+import com.zzimple.internal.UserServiceClient;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
@@ -59,7 +58,7 @@ public class GuestEstimateService {
   private final EstimateExtraChargeRepository estimateExtraChargeRepository;
   private final MoveItemExtraChargeRepository moveItemExtraChargeRepository;
   private final OwnerServiceClient ownerServiceClient;
-  private final UserRepository userRepository;
+  private final UserServiceClient userServiceClient;
   private final EstimateCalculationRepository estimateCalculationRepository;
   private final StorePriceSettingRepository storePriceSettingRepository;
   private final EstimateResponseRepository estimateResponseRepository;
@@ -154,7 +153,8 @@ public class GuestEstimateService {
             OwnerServiceClient.asLong(store, "ownerId"))
         .orElseThrow(() -> new EntityNotFoundException("Owner not found"));
 
-    User user = userRepository.findById(OwnerServiceClient.asLong(owner, "userId"))
+    Map<String, Object> ownerUser = userServiceClient.getUser(
+            OwnerServiceClient.asLong(owner, "userId"))
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
     EstimateCalculation calculation = estimateCalculationRepository
@@ -224,8 +224,8 @@ public class GuestEstimateService {
     return EstimateListDetailResponse.builder()
         .estimateNo(estimate.getEstimateNo())
         .storeName(OwnerServiceClient.asString(store, "name"))
-        .ownerName(user.getUserName())
-        .ownerPhone(user.getPhoneNumber())
+        .ownerName(UserServiceClient.asString(ownerUser, "userName"))
+        .ownerPhone(UserServiceClient.asString(ownerUser, "phoneNumber"))
         .userId(estimate.getUserId())
         .moveDate(estimate.getMoveDate())
         .moveTime(estimate.getMoveTime())

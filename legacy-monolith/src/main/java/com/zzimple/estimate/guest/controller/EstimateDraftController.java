@@ -19,7 +19,7 @@ import com.zzimple.estimate.guest.service.MoveItemsService;
 import com.zzimple.estimate.guest.service.MoveOptionService;
 import com.zzimple.estimate.guest.service.MoveTypeService;
 import com.zzimple.global.dto.BaseResponse;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Map;
@@ -219,7 +219,7 @@ public class EstimateDraftController {
   @PostMapping("/finalize/{draftId}")
   public ResponseEntity<BaseResponse<Long>> finalizeEstimate(
       @PathVariable UUID draftId,
-      @AuthenticationPrincipal CustomUserDetails userDetails
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails
   ) {
     Long estimateNo = estimateDraftFullService.finalizeEstimateDraft(draftId, userDetails);
     return ResponseEntity.ok(BaseResponse.success("견적서가 저장되었습니다.", estimateNo));

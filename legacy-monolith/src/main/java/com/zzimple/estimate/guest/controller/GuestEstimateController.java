@@ -8,7 +8,7 @@ import com.zzimple.estimate.guest.dto.response.GuestEstimateRespondResult;
 import com.zzimple.estimate.guest.dto.response.PagedResponse;
 import com.zzimple.estimate.guest.service.GuestEstimateService;
 import com.zzimple.global.dto.BaseResponse;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class GuestEstimateController {
       description = "로그인한 고객이 받은 확정 견적서 목록을 페이징으로 조회합니다."
   )
   public ResponseEntity<BaseResponse<PagedResponse<EstimateListResponse>>> getMyConfirmEstimates(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
@@ -47,7 +47,7 @@ public class GuestEstimateController {
 
   @GetMapping("all/list/estimates")
   public ResponseEntity<BaseResponse<PagedMyEstimates>> getMyEstimates(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
@@ -58,7 +58,7 @@ public class GuestEstimateController {
 
   @GetMapping("/{estimateNo}/responses")
   public ResponseEntity<BaseResponse<EstimateResponseList>> getResponses(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @PathVariable Long estimateNo
   ) {
     EstimateResponseList responseList = guestEstimateService.getResponses(estimateNo, userDetails.getUserId());
@@ -69,7 +69,7 @@ public class GuestEstimateController {
   public ResponseEntity<BaseResponse<GuestEstimateRespondResult>> respondToEstimate(
       @PathVariable Long estimateNo,
       @PathVariable Long storeId,
-      @AuthenticationPrincipal CustomUserDetails userDetails
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails
   ) {
     Long userId = userDetails.getUserId(); // 고객 ID
 

@@ -7,7 +7,7 @@ import com.zzimple.estimate.guest.service.GuestEstimateService;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.dto.BaseResponse;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import com.zzimple.internal.StaffServiceClient;
 import java.util.Map;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,13 +50,10 @@ public class EstimateController {
     public ResponseEntity<BaseResponse<EstimateListDetailResponse>> getDetail(
         @PathVariable Long storeId,
         @PathVariable Long estimateNo,
-        @AuthenticationPrincipal CustomUserDetails user
+        @AuthenticationPrincipal GatewayUserPrincipal user
     ) {
-      boolean isOwner = user.getAuthorities().stream()
-          .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER"));
-
-      boolean isStaff = user.getAuthorities().stream()
-          .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"));
+      boolean isOwner = "OWNER".equals(user.getRole());
+      boolean isStaff = "STAFF".equals(user.getRole());
 
       if (isOwner) {
         // 사장님 권한 확인

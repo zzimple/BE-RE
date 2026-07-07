@@ -8,9 +8,7 @@ import com.zzimple.estimate.owner.dto.response.EstimateSummaryResponse;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.exception.CustomException;
 import com.zzimple.global.exception.GlobalErrorCode;
-import com.zzimple.user.entity.User;
-import com.zzimple.user.exception.UserErrorCode;
-import com.zzimple.user.repository.UserRepository;
+import com.zzimple.internal.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,7 +25,7 @@ public class EstimateConfirmedService {
 
   private final EstimateRepository estimateRepository;
   private final OwnerServiceClient ownerServiceClient;
-  private final UserRepository userRepository;
+  private final UserServiceClient userServiceClient;
 
   // 아예 견적서 확정된 코드
   public Page<EstimateConfirmedResponse> getConfirmedEstimates(Long storeId, int page, int size) {
@@ -35,9 +33,10 @@ public class EstimateConfirmedService {
     return estimateRepository.findByStoreIdAndStatus(storeId, EstimateStatus.CONFIRMED, pageable)
         .map(estimate -> {
           Long userId = estimate.getUserId();
-          String guestName = userRepository.findById(userId)
-              .map(User::getUserName)
-              .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+          // user 도메인은 auth-service로 추출됨 - 내부 API 호출
+          String guestName = userServiceClient.getUser(userId)
+              .map(u -> UserServiceClient.asString(u, "userName"))
+              .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
           return EstimateConfirmedResponse.from(estimate, guestName);
         });

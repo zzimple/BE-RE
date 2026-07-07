@@ -14,7 +14,7 @@ import com.zzimple.estimate.owner.service.EstimatePreviewService;
 import com.zzimple.estimate.owner.service.SaveItemBasePriceService;
 import com.zzimple.estimate.owner.service.StorePriceSettingService;
 import com.zzimple.global.dto.BaseResponse;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class EstimateOwnerPageController {
   )
   @PostMapping("/estimate/default-prices")
   public ResponseEntity<BaseResponse<List<SaveItemBasePriceResponse>>> saveBasePrice(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestBody List<SaveItemBasePriceRequest> requests
   ) {
     Long storeId = userDetails.getStoreId();
@@ -63,7 +63,7 @@ public class EstimateOwnerPageController {
   )
   @GetMapping("/estimate/default-prices")
   public ResponseEntity<BaseResponse<List<SaveItemBasePriceResponse>>> getBasePrices(
-      @AuthenticationPrincipal CustomUserDetails user
+      @AuthenticationPrincipal GatewayUserPrincipal user
   ) {
 
     Long userId = user.getUserId();
@@ -78,7 +78,7 @@ public class EstimateOwnerPageController {
   )
   @PostMapping("/price-setting")
   public ResponseEntity<BaseResponse<String>> savePriceSetting(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestBody SaveStorePriceSettingRequest request
   ) {
 
@@ -94,7 +94,7 @@ public class EstimateOwnerPageController {
   )
   @GetMapping("/price-setting")
   public ResponseEntity<BaseResponse<StorePriceSettingResponse>> getPriceSetting(
-      @AuthenticationPrincipal CustomUserDetails userDetails
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails
   ) {
     Long storeId = userDetails.getStoreId();
     StorePriceSettingResponse response = storePriceSettingService.getPriceSetting(storeId);
@@ -107,7 +107,7 @@ public class EstimateOwnerPageController {
   )
   @GetMapping("/list/approve")
   public ResponseEntity<BaseResponse<PagedResponse<EstimatePreviewResponse>>> getPublicEstimates(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestParam int page,
       @RequestParam int size,
       @ModelAttribute EstimatePreviewRequest request
@@ -141,7 +141,7 @@ public class EstimateOwnerPageController {
   )
   @GetMapping("/list/confirmed")
   public ResponseEntity<BaseResponse<PagedResponse<EstimateConfirmedResponse>>> getMyConfirmedEstimates(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestParam int page,
       @RequestParam int size
   ) {
@@ -157,7 +157,7 @@ public class EstimateOwnerPageController {
   }
 
   @GetMapping("/summary")
-  public ResponseEntity<BaseResponse<EstimateSummaryResponse>> getSummary(@AuthenticationPrincipal CustomUserDetails userDetails) {
+  public ResponseEntity<BaseResponse<EstimateSummaryResponse>> getSummary(@AuthenticationPrincipal GatewayUserPrincipal userDetails) {
     Long userId = userDetails.getUserId();
 
     return ResponseEntity.ok(BaseResponse.success(estimateConfirmedService.getEstimateSummary(userId)));

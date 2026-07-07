@@ -73,6 +73,35 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: zzimple-dev-cluster-01
 
+  mysql-auth:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: auth-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      AUTH_DB_URL: jdbc:mysql://mysql-auth:3306/auth_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-secret-key-local-dev-secret-key}
+    depends_on:
+      - discovery-server
+      - config-server
+      - mysql-auth
+      - kafka
+
   mysql-owner:
     image: mysql:8.0
     environment:
@@ -96,7 +125,6 @@ services:
       OWNER_DB_URL: jdbc:mysql://mysql-owner:3306/owner_db
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      LEGACY_MONOLITH_URL: http://legacy-monolith:8081
     depends_on:
       - discovery-server
       - config-server
@@ -131,7 +159,7 @@ services:
       - config-server
       - mysql-staff
 
-  # strangler 단계의 legacy 모놀리스 (미추출 도메인: user/owner/estimate)
+  # strangler 단계의 legacy 모놀리스 (미추출 도메인: estimate)
   mysql-legacy:
     image: mysql:8.0
     environment:
@@ -162,6 +190,7 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-secret-key-local-dev-secret-key}
       CLIENTS_STAFF_SERVICE_URL: http://staff-service:8083
       CLIENTS_OWNER_SERVICE_URL: http://owner-service:8082
+      CLIENTS_AUTH_SERVICE_URL: http://auth-service:8084
     depends_on:
       - mysql-legacy
       - redis

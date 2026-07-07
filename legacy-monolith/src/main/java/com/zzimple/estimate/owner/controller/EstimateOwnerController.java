@@ -17,7 +17,7 @@ import com.zzimple.estimate.owner.service.EstimatePreviewService;
 import com.zzimple.estimate.owner.service.SaveItemExtraPriceService;
 import com.zzimple.estimate.owner.service.SaveItemBasePriceService;
 import com.zzimple.global.dto.BaseResponse;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +54,7 @@ public class EstimateOwnerController {
   )
   @GetMapping("/list/public")
   public ResponseEntity<BaseResponse<PagedResponse<EstimatePreviewResponse>>> getPublicEstimates(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestParam int page,
       @RequestParam int size,
       @ModelAttribute EstimatePreviewRequest request
@@ -122,7 +122,7 @@ public class EstimateOwnerController {
 
   @GetMapping("/with-extra/{estimateNo}")
   public ResponseEntity<BaseResponse<List<EstimateItemWithExtraChargeResponse>>> getEstimateItemsWithExtras(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @PathVariable  Long estimateNo
   ) {
     Long userId = userDetails.getUserId();
@@ -141,7 +141,7 @@ public class EstimateOwnerController {
   @PostMapping("/drafts/{estimateNo}/items")
   public ResponseEntity<BaseResponse<String>> saveEstimateItems(
       @PathVariable Long estimateNo,
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @RequestBody List<SaveEstimatePriceRequest> requests) {
 
     Long userId = userDetails.getUserId();
@@ -156,7 +156,7 @@ public class EstimateOwnerController {
   @PostMapping("/drafts/{estimateNo}/items/item-total")
   public ResponseEntity<BaseResponse<ItemTotalResultResponse>> ItemTotalPrices(
       @PathVariable Long estimateNo,
-      @AuthenticationPrincipal CustomUserDetails userDetails
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails
       ) {
 
     Long userId = userDetails.getUserId();
@@ -169,7 +169,7 @@ public class EstimateOwnerController {
   @Operation(summary = "[사장님 | 견적 추가사항 최종 입력 저장]")
   @PostMapping("/drafts/{estimateNo}/save-owner-input")
   public ResponseEntity<BaseResponse<String>> saveOwnerInput(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @PathVariable Long estimateNo,
       @RequestBody SubmitFinalEstimateRequest request
   ) {
@@ -186,7 +186,7 @@ public class EstimateOwnerController {
   )
   @PostMapping("/drafts/{estimateNo}/calculate-and-save-final")
   public ResponseEntity<BaseResponse<CalculateOwnerInputResponse>> calculateAndSaveFinalTotals(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @AuthenticationPrincipal GatewayUserPrincipal userDetails,
       @PathVariable Long estimateNo
   ) {
     Long storeId = userDetails.getStoreId();

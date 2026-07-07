@@ -13,8 +13,7 @@ import com.zzimple.estimate.owner.repository.EstimateOwnerResponseRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.exception.CustomException;
 import com.zzimple.global.exception.GlobalErrorCode;
-import com.zzimple.user.exception.UserErrorCode;
-import com.zzimple.user.repository.UserRepository;
+import com.zzimple.internal.UserServiceClient;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +36,7 @@ public class EstimatePreviewService {
 
   private final EstimateRepository estimateRepository;
   private final OwnerServiceClient ownerServiceClient;
-  private final UserRepository userRepository;
+  private final UserServiceClient userServiceClient;
   private final EstimateOwnerResponseRepository estimateOwnerResponseRepository;
 
   // 공개 견적서 페이징
@@ -137,8 +136,8 @@ public class EstimatePreviewService {
       String fromRegion1, String fromRegion2, String toRegion1, String toRegion2
   ) {
 
-    userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+    userServiceClient.getUser(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
     return getEstimatePreview(
         null, page, size, moveYear, moveMonth, moveDay,
@@ -175,8 +174,8 @@ public class EstimatePreviewService {
       String fromRegion1, String fromRegion2, String toRegion1, String toRegion2
   ) {
     // 유효 사용자 확인
-    userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+    userServiceClient.getUser(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
     // moveDate 파싱
     String yearStr  = (moveYear  != null ? String.valueOf(moveYear) : null);

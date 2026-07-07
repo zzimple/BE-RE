@@ -1,0 +1,35 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: auth-service
+  config:
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  datasource:
+    url: ${AUTH_DB_URL:jdbc:mysql://localhost:3309/auth_db}
+    username: ${AUTH_DB_USERNAME:root}
+    password: ${AUTH_DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+# JWT 발급 키 (게이트웨이의 검증 키와 동일해야 한다 - Config Server가 양쪽에 배포)
+jwt:
+  secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-local-dev-secret-key}
+
+# owner-service는 Eureka로 디스커버리 (url 비움)
+clients:
+  owner-service:
+    url: ${OWNER_SERVICE_URL:}

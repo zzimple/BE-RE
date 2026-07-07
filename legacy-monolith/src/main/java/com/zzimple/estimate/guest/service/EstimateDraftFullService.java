@@ -7,7 +7,7 @@ import com.zzimple.estimate.guest.enums.EstimateStatus;
 import com.zzimple.estimate.guest.mapper.EstimateMapper;
 import com.zzimple.estimate.guest.repository.MoveItemsRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
-import com.zzimple.global.jwt.CustomUserDetails;
+import com.zzimple.common.security.GatewayUserPrincipal;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class EstimateDraftFullService {
 
   // Redis에 임시 저장된 견적서를 DB에 영구 저장합니다.
   @Transactional
-  public Long finalizeEstimateDraft(UUID draftId, CustomUserDetails userDetails) {
+  public Long finalizeEstimateDraft(UUID draftId, GatewayUserPrincipal userDetails) {
     Long userId = userDetails.getUserId();
 
     // 1. Redis에서 초안 데이터 전체 조회 (기존 메서드 재활용)

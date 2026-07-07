@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:staff_test;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  cloud:
+    config:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+clients:
+  auth-service:
+    url: http://localhost:1
+  owner-service:
+    url: http://localhost:1
+  estimate-service:
+    url: http://localhost:1

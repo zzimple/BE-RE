@@ -1,5 +1,7 @@
 package com.zzimple.estimate.owner.service;
 
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.estimate.guest.entity.Estimate;
 import com.zzimple.estimate.owner.entity.EstimateOwnerResponse;
 import com.zzimple.estimate.owner.entity.EstimateResponse;
@@ -19,8 +21,6 @@ import com.zzimple.estimate.owner.repository.EstimateExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.estimate.owner.repository.StorePriceSettingRepository;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.repository.StoreRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +38,7 @@ public class EstimateDetailUpdateService {
   private final StorePriceSettingRepository storePriceSettingRepository;
   private final EstimateExtraChargeRepository estimateExtraChargeRepository;
   private final MoveItemsRepository moveItemsRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final EstimateCalculationRepository estimateCalculationRepository;
   private final EstimateResponseRepository estimateResponseRepository;
   private final EstimateOwnerResponseRepository estimateOwnerResponseRepository;
@@ -49,7 +49,8 @@ public class EstimateDetailUpdateService {
     Estimate estimate = estimateRepository.findById(estimateNo)
         .orElseThrow(() -> new EntityNotFoundException("견적서를 찾을 수 없습니다. id=" + estimateNo));
 
-    Store store = storeRepository.findById(storeId)
+    // 매장 존재 확인 (owner 도메인 - owner-service 내부 API)
+    ownerServiceClient.getStore(storeId)
         .orElseThrow(() -> new EntityNotFoundException("Store not found with id=" + storeId));
 
     Integer truckCount = request.getTruckCount();

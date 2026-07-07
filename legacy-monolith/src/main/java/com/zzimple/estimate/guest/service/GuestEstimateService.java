@@ -1,5 +1,7 @@
 package com.zzimple.estimate.guest.service;
 
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.estimate.guest.dto.EstimateResponseList;
 import com.zzimple.estimate.guest.dto.MyEstimatePreview;
 import com.zzimple.estimate.guest.dto.response.EstimateResponsePreview;
@@ -29,10 +31,6 @@ import com.zzimple.estimate.owner.repository.EstimateExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.estimate.owner.repository.MoveItemExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.StorePriceSettingRepository;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.repository.StoreRepository;
 import com.zzimple.user.entity.User;
 import com.zzimple.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -60,8 +58,7 @@ public class GuestEstimateService {
   private final MoveItemsRepository moveItemsRepository;
   private final EstimateExtraChargeRepository estimateExtraChargeRepository;
   private final MoveItemExtraChargeRepository moveItemExtraChargeRepository;
-  private final StoreRepository storeRepository;
-  private final OwnerRepository ownerRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final UserRepository userRepository;
   private final EstimateCalculationRepository estimateCalculationRepository;
   private final StorePriceSettingRepository storePriceSettingRepository;
@@ -78,10 +75,10 @@ public class GuestEstimateService {
       // 1) storeName 조회
       String storeName = "알 수 없음";
       if (estimate.getStoreId() != null) {
-        storeName = storeRepository.findById(estimate.getStoreId())
+        storeName = ownerServiceClient.getStore(estimate.getStoreId())
             .map(store -> {
-              String name = store.getName();
-              return (name != null ? name : "알 수 없음");
+              String name = OwnerServiceClient.asString(store, "name");
+              return (name != null && !name.isBlank() ? name : "알 수 없음");
             })
             .orElseGet(() -> {
               log.warn("[Store 조회 실패] storeId={}에 해당하는 Store 없음", estimate.getStoreId());
@@ -141,7 +138,8 @@ public class GuestEstimateService {
         .orElseThrow(() -> new EntityNotFoundException(
             "응답 없음 estimateNo=" + estimateNo + ", storeId=" + storeId));
 
-    Store store = storeRepository.findById(storeId)
+    // owner 도메인은 owner-service로 추출됨 - 내부 API 호출
+    Map<String, Object> store = ownerServiceClient.getStore(storeId)
         .orElseThrow(() -> new EntityNotFoundException("Store not found for id=" + storeId));
 
     log.info("▶ getEstimateDetail 호출: estimateNo={} storeId={}",
@@ -149,13 +147,14 @@ public class GuestEstimateService {
 
 
     // StorePriceSetting 조회
-    StorePriceSetting setting = storePriceSettingRepository.findById(store.getId())
-        .orElseThrow(() -> new EntityNotFoundException("StorePriceSetting not found for storeId=" + store.getId()));
+    StorePriceSetting setting = storePriceSettingRepository.findById(storeId)
+        .orElseThrow(() -> new EntityNotFoundException("StorePriceSetting not found for storeId=" + storeId));
 
-    Owner owner = ownerRepository.findById(store.getOwnerId())
+    Map<String, Object> owner = ownerServiceClient.getOwner(
+            OwnerServiceClient.asLong(store, "ownerId"))
         .orElseThrow(() -> new EntityNotFoundException("Owner not found"));
 
-    User user = userRepository.findById(owner.getUserId())
+    User user = userRepository.findById(OwnerServiceClient.asLong(owner, "userId"))
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
     EstimateCalculation calculation = estimateCalculationRepository
@@ -224,7 +223,7 @@ public class GuestEstimateService {
 
     return EstimateListDetailResponse.builder()
         .estimateNo(estimate.getEstimateNo())
-        .storeName(store.getName())
+        .storeName(OwnerServiceClient.asString(store, "name"))
         .ownerName(user.getUserName())
         .ownerPhone(user.getPhoneNumber())
         .userId(estimate.getUserId())
@@ -290,7 +289,7 @@ public class GuestEstimateService {
     List<EstimateResponsePreview> previews = responses.stream()
         .map(r -> {
           Long storeId = r.getStoreId();
-          Store store = storeRepository.findById(storeId)
+          Map<String, Object> store = ownerServiceClient.getStore(storeId)
               .orElse(null);
 
           EstimateCalculation calc = estimateCalculationRepository
@@ -299,7 +298,7 @@ public class GuestEstimateService {
 
           return EstimateResponsePreview.builder()
               .storeId(storeId)
-              .storeName(store != null ? store.getName() : "알 수 없음")
+              .storeName(store != null ? OwnerServiceClient.asString(store, "name") : "알 수 없음")
               .truckCount(r.getTruckCount())
               .ownerMessage(r.getOwnerMessage())
               .status(r.getStatus())

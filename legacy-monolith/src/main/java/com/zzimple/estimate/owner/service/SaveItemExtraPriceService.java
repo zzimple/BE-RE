@@ -1,5 +1,7 @@
 package com.zzimple.estimate.owner.service;
 
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.estimate.guest.entity.MoveItems;
 import com.zzimple.estimate.guest.repository.MoveItemsRepository;
 import com.zzimple.estimate.owner.dto.request.SaveEstimatePriceRequest;
@@ -12,9 +14,7 @@ import com.zzimple.estimate.owner.repository.EstimateCalculationRepository;
 import com.zzimple.estimate.owner.repository.MoveItemExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.MoveItemPriceByStoreRepository;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.exception.StoreErrorCode;
-import com.zzimple.owner.store.repository.StoreRepository;
+import com.zzimple.global.exception.GlobalErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +33,15 @@ public class SaveItemExtraPriceService {
   private final MoveItemExtraChargeRepository moveItemExtraChargeRepository;
   private final EstimateCalculationRepository estimateCalculationRepository;
   private final MoveItemPriceByStoreRepository moveItemPriceByStoreRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
 
   @Transactional
   public void saveEstimateItems(Long estimateNo, Long userId, List<SaveEstimatePriceRequest> itemRequests) {
 
-    Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    Long storeId = store.getId();
+    Long storeId = OwnerServiceClient.asLong(store, "storeId");
 
     // moveitem의 기본금을 update하기.
     for (SaveEstimatePriceRequest req : itemRequests) {
@@ -120,11 +120,11 @@ public class SaveItemExtraPriceService {
   @Transactional
   public ItemTotalResultResponse calculateAndSaveItemTotalPrices(Long estimateNo, Long userId) {
 
-    Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    Long storeId = store.getId();
-    log.info("조회 중인 ownerUserId={}, 조회된 storeId={}", userId, store.getId());
+    Long storeId = OwnerServiceClient.asLong(store, "storeId");
+    log.info("조회 중인 ownerUserId={}, 조회된 storeId={}", userId, OwnerServiceClient.asLong(store, "storeId"));
 
     List<MoveItems> items = moveItemsRepository.findByEstimateNo(estimateNo);
     List<ItemTotalResponse> responses = new ArrayList<>();

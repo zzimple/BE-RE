@@ -59,6 +59,51 @@ services:
       - discovery-server
       - config-server
 
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: zzimple-dev-cluster-01
+
+  mysql-owner:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: owner_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  owner-service:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: owner-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      OWNER_DB_URL: jdbc:mysql://mysql-owner:3306/owner_db
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      LEGACY_MONOLITH_URL: http://legacy-monolith:8081
+    depends_on:
+      - discovery-server
+      - config-server
+      - mysql-owner
+      - redis
+      - kafka
+
   mysql-staff:
     image: mysql:8.0
     environment:
@@ -116,6 +161,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-secret-key-local-dev-secret-key}
       CLIENTS_STAFF_SERVICE_URL: http://staff-service:8083
+      CLIENTS_OWNER_SERVICE_URL: http://owner-service:8082
     depends_on:
       - mysql-legacy
       - redis

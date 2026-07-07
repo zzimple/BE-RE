@@ -1,5 +1,7 @@
 package com.zzimple.estimate.owner.service;
 
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.estimate.guest.enums.EstimateStatus;
 import com.zzimple.estimate.owner.entity.EstimateOwnerResponse;
 import com.zzimple.estimate.owner.dto.response.EstimatePreviewResponse;
@@ -10,9 +12,7 @@ import com.zzimple.estimate.owner.exception.EstimateErrorCode;
 import com.zzimple.estimate.owner.repository.EstimateOwnerResponseRepository;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.exception.StoreErrorCode;
-import com.zzimple.owner.store.repository.StoreRepository;
+import com.zzimple.global.exception.GlobalErrorCode;
 import com.zzimple.user.exception.UserErrorCode;
 import com.zzimple.user.repository.UserRepository;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
 public class EstimatePreviewService {
 
   private final EstimateRepository estimateRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final UserRepository userRepository;
   private final EstimateOwnerResponseRepository estimateOwnerResponseRepository;
 
@@ -106,10 +106,10 @@ public class EstimatePreviewService {
       );
     } else {
       // 새로 추가할 “ACCEPTED” 전용 네이티브 쿼리
-          Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+          Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-          Long storeId = store.getId();
+          Long storeId = OwnerServiceClient.asLong(store, "storeId");
 
       estimates = estimateRepository.findAcceptedEstimatesWithFilters(
           storeId,
@@ -213,11 +213,11 @@ public class EstimatePreviewService {
     );
 
     // 내 storeId로 ACCEPTED 견적 조회
-    Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
     Page<Estimate> accepted = estimateRepository.findAcceptedEstimatesWithFilters(
-        store.getId(),
+        OwnerServiceClient.asLong(store, "storeId"),
         yearStr, monthStr, dayStr,
         moveTypeValue, moveOptionValue,
         fromRegion1, fromRegion2,
@@ -266,11 +266,11 @@ public class EstimatePreviewService {
 //  }
 
     // ✅ 이미 응답한 estimate는 제외하는 필터 추가
-    Long storeId = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND))
-        .getId();
+    Long storeId = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .map(s -> OwnerServiceClient.asLong(s, "storeId"))
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    List<Long> respondedEstimateNos = estimateOwnerResponseRepository.findAllByStoreId(store.getId())
+    List<Long> respondedEstimateNos = estimateOwnerResponseRepository.findAllByStoreId(storeId)
         .stream()
         .map(EstimateOwnerResponse::getEstimateNo)
         .toList();

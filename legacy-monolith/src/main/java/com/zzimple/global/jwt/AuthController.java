@@ -1,11 +1,9 @@
 package com.zzimple.global.jwt;
 
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.exception.OwnerErrorCode;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.repository.StoreRepository;
+import com.zzimple.global.exception.GlobalErrorCode;
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.user.entity.User;
 import com.zzimple.user.enums.UserRole;
 import com.zzimple.user.repository.UserRepository;
@@ -42,8 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
   private final JwtUtil jwtUtil;
   private final UserRepository userRepository;
-  private final OwnerRepository ownerRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
 
   @Operation(
       summary = "토큰 필요 O 보낸 토큰이 만료되었을 경우 재발급",
@@ -123,17 +120,12 @@ public class AuthController {
       String newAccessToken;
 
       if (user.getRole() == UserRole.OWNER) {
-//        Owner owner = ownerRepository.findByUserId(user.getId())
-//            .orElseThrow(() -> new CustomException(OwnerErrorCode.OWNER_NOT_FOUND));
+        // owner 도메인은 owner-service로 추출됨 - 내부 API 호출
+        Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(user.getId())
+            .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-//        Store store = storeRepository.findByOwnerUserId(owner.getId())
-//            .orElseThrow(() -> new CustomException(OwnerErrorCode.STORE_NOT_FOUND));
-
-        Store store = storeRepository.findByOwnerUserId(user.getId())
-            .orElseThrow(() -> new CustomException(OwnerErrorCode.STORE_NOT_FOUND));
-
-        Long storeId = store.getId();         // 가게 ID
-        Long ownerId = store.getOwnerId();    // 사장님 PK
+        Long storeId = OwnerServiceClient.asLong(store, "storeId");
+        Long ownerId = OwnerServiceClient.asLong(store, "ownerId");
         newAccessToken = jwtUtil.createAccessToken(
             user.getLoginId(), user.getId(), roles, storeId, ownerId
         );

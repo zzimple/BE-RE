@@ -1,6 +1,5 @@
 package com.zzimple.user.repository;
 
-import com.zzimple.owner.entity.Owner;
 import com.zzimple.user.entity.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

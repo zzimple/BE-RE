@@ -1,15 +1,13 @@
 package com.zzimple.estimate.owner.service;
 
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.estimate.guest.enums.EstimateStatus;
 import com.zzimple.estimate.owner.dto.response.EstimateConfirmedResponse;
 import com.zzimple.estimate.owner.dto.response.EstimateSummaryResponse;
 import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.exception.StoreErrorCode;
-import com.zzimple.owner.store.repository.StoreRepository;
+import com.zzimple.global.exception.GlobalErrorCode;
 import com.zzimple.user.entity.User;
 import com.zzimple.user.exception.UserErrorCode;
 import com.zzimple.user.repository.UserRepository;
@@ -28,9 +26,8 @@ import org.springframework.stereotype.Service;
 public class EstimateConfirmedService {
 
   private final EstimateRepository estimateRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final UserRepository userRepository;
-  private final OwnerRepository ownerRepository;
 
   // 아예 견적서 확정된 코드
   public Page<EstimateConfirmedResponse> getConfirmedEstimates(Long storeId, int page, int size) {
@@ -50,10 +47,10 @@ public class EstimateConfirmedService {
   public EstimateSummaryResponse getEstimateSummary(Long userId) {
     log.info("🟡 [getEstimateSummary] 요청 유저 ID: {}", userId);
 
-    Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    Long storeId = store.getId();
+    Long storeId = OwnerServiceClient.asLong(store, "storeId");
     log.info("🟢 매핑된 Store ID: {}", storeId);
 
 

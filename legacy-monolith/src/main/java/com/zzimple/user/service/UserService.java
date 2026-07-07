@@ -2,11 +2,8 @@ package com.zzimple.user.service;
 
 import com.zzimple.global.exception.CustomException;
 import com.zzimple.global.exception.GlobalErrorCode;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.exception.OwnerErrorCode;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.repository.StoreRepository;
+import com.zzimple.internal.OwnerServiceClient;
+import java.util.Map;
 import com.zzimple.user.dto.response.ProfileResponse;
 import com.zzimple.user.enums.UserRole;
 import com.zzimple.user.exception.UserErrorCode;
@@ -46,8 +43,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
-  private final OwnerRepository ownerRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
 
   public LoginIdCheckResponse checkLoginIdDuplicate(UserLoginIdCheckRequest request) {
     // 로그인 아이디(이메일) 존재 여부 확인
@@ -127,11 +123,12 @@ public class UserService {
 
       // 사장님일 경우에만 storeId, ownerId 추출 (1번 조회로 변경) 🔥
       if (user.getRole() == UserRole.OWNER) {
-        Store store = storeRepository.findByOwnerUserId(user.getId())
-            .orElseThrow(() -> new CustomException(OwnerErrorCode.STORE_NOT_FOUND));
+        // owner 도메인은 owner-service로 추출됨 - 내부 API 호출
+        Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(user.getId())
+            .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-        storeId = store.getId();
-        ownerId = store.getOwnerId();
+        storeId = OwnerServiceClient.asLong(store, "storeId");
+        ownerId = OwnerServiceClient.asLong(store, "ownerId");
       }
 
       // 3. 토큰 생성

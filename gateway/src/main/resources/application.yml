@@ -17,6 +17,11 @@ spring:
           uri: lb://staff-service
           predicates:
             - Path=/staff/**,/owner/schedule/**
+        # /owner/schedule/** 는 위 staff-service 라우트가 먼저 매칭된다 (선언 순서 중요)
+        - id: owner-service
+          uri: lb://owner-service
+          predicates:
+            - Path=/owner/**
         # strangler: 아직 추출되지 않은 나머지 경로는 legacy 모놀리스로 전달
         - id: legacy-monolith
           uri: ${LEGACY_MONOLITH_URL:http://localhost:8081}
@@ -35,4 +40,4 @@ jwt:
 
 gateway:
   # JWT 검증을 건너뛰는 공개 경로 (모놀리스 SecurityConfig의 permitAll 목록 승계, 콤마 구분)
-  public-paths: /auth/**,/oauth2/**,/users/**,/owner/signup,/owner/business-status/**,/juso/**,/swagger-ui/**,/v3/api-docs/**
+  public-paths: /auth/**,/oauth2/**,/users/**,/owner/register,/owner/login-id-duplicate-check,/owner/business/**,/juso/**,/swagger-ui/**,/v3/api-docs/**

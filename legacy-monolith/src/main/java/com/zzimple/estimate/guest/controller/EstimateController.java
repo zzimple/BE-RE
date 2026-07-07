@@ -1,5 +1,6 @@
 package com.zzimple.estimate.guest.controller;
 
+import com.zzimple.internal.OwnerServiceClient;
 import com.zzimple.estimate.guest.dto.response.EstimateListDetailResponse;
 import com.zzimple.estimate.guest.entity.Estimate;
 import com.zzimple.estimate.guest.service.GuestEstimateService;
@@ -7,10 +8,6 @@ import com.zzimple.estimate.owner.repository.EstimateRepository;
 import com.zzimple.global.dto.BaseResponse;
 import com.zzimple.global.exception.CustomException;
 import com.zzimple.global.jwt.CustomUserDetails;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.repository.StoreRepository;
 import com.zzimple.internal.StaffServiceClient;
 import java.util.Map;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,8 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EstimateController {
 
   private final GuestEstimateService guestEstimateService;
-  private final OwnerRepository ownerRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final EstimateRepository estimateRepository;
   private final StaffServiceClient staffServiceClient;
 
@@ -64,9 +60,9 @@ public class EstimateController {
 
       if (isOwner) {
         // 사장님 권한 확인
-        Store store = storeRepository.findByOwnerUserId(user.getUserId())
+        Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(user.getUserId())
             .orElseThrow(() -> new EntityNotFoundException("Store not found"));
-        if (!store.getId().equals(storeId)) {
+        if (!storeId.equals(OwnerServiceClient.asLong(store, "storeId"))) {
           throw new AccessDeniedException("매장 접근 권한이 없습니다.");
         }
 

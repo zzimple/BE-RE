@@ -1,5 +1,6 @@
 package com.zzimple.estimate.owner.service;
 
+import com.zzimple.internal.OwnerServiceClient;
 import com.zzimple.estimate.guest.entity.MoveItems;
 import com.zzimple.estimate.guest.enums.MoveItemCategory;
 import com.zzimple.estimate.guest.exception.MoveItemErrorCode;
@@ -15,12 +16,7 @@ import com.zzimple.estimate.owner.repository.MoveItemBasePriceRepository;
 import com.zzimple.estimate.owner.repository.MoveItemExtraChargeRepository;
 import com.zzimple.estimate.owner.repository.MoveItemPriceByStoreRepository;
 import com.zzimple.global.exception.CustomException;
-import com.zzimple.owner.entity.Owner;
-import com.zzimple.owner.repository.OwnerRepository;
-import com.zzimple.owner.store.entity.Store;
-import com.zzimple.owner.store.exception.StoreErrorCode;
-import com.zzimple.owner.store.repository.StoreRepository;
-import com.zzimple.owner.exception.OwnerErrorCode;
+import com.zzimple.global.exception.GlobalErrorCode;
 import com.zzimple.user.repository.UserRepository;
 import java.util.HashMap;
 import java.util.List;
@@ -39,8 +35,7 @@ public class SaveItemBasePriceService {
 
   private final MoveItemBasePriceRepository basePriceRepository;
   private final ItemTypeRepository itemTypeRepository;
-  private final OwnerRepository ownerRepository;
-  private final StoreRepository storeRepository;
+  private final OwnerServiceClient ownerServiceClient;
   private final MoveItemBasePriceRepository moveItemBasePriceRepository;
   private final MoveItemExtraChargeRepository moveItemExtraChargeRepository;
   private final MoveItemsRepository moveItemsRepository;
@@ -104,13 +99,10 @@ public class SaveItemBasePriceService {
   // 해당 가게 짐 목록 단가 조회
   public List<SaveItemBasePriceResponse> findAllByStoreId(Long userId) {
 
-    Owner owner = ownerRepository.findByUserId(userId)
-        .orElseThrow(() -> new CustomException(OwnerErrorCode.OWNER_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    Store store = storeRepository.findByOwnerUserId(owner.getId())
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
-
-    Long storeId = store.getId();
+    Long storeId = OwnerServiceClient.asLong(store, "storeId");
 
     // 3. Store ID로 기본 단가 조회
     List<MoveItemBasePrice> prices = moveItemBasePriceRepository.findAllByStoreId(storeId);
@@ -125,10 +117,10 @@ public class SaveItemBasePriceService {
       Long estimateNo,
       Long userId
   ) {
-    Store store = storeRepository.findByOwnerUserId(userId)
-        .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));
+    Map<String, Object> store = ownerServiceClient.getStoreByOwnerUserId(userId)
+        .orElseThrow(() -> new CustomException(GlobalErrorCode.RESOURCE_NOT_FOUND));
 
-    Long storeId = store.getId();
+    Long storeId = OwnerServiceClient.asLong(store, "storeId");
 
 
     // 2. 해당 견적서의 짐 목록 조회 (견적서 번호 + 가게 ID 필터)

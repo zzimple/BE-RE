@@ -1,0 +1,19 @@
+# owner-service 전용 설정
+spring:
+  datasource:
+    url: ${OWNER_DB_URL:jdbc:mysql://mysql-owner:3306/owner_db}
+    username: ${OWNER_DB_USERNAME:root}
+    password: ${OWNER_DB_PASSWORD:root}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      database: 0
+
+# strangler: user 도메인은 Phase 4 전까지 legacy 소유
+clients:
+  auth-service:
+    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}
+
+# 공공데이터 사업자 상태 조회 API 키
+api:
+  serviceKey: ${BUSINESS_API_SERVICE_KEY:changeme}

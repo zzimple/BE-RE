@@ -20,7 +20,7 @@ import com.zzimple.owner.repository.OwnerRepository;
 import com.zzimple.owner.store.entity.Store;
 import com.zzimple.owner.store.exception.StoreErrorCode;
 import com.zzimple.owner.store.repository.StoreRepository;
-import com.zzimple.staff.exception.StaffErrorCode;
+import com.zzimple.owner.exception.OwnerErrorCode;
 import com.zzimple.user.repository.UserRepository;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +105,7 @@ public class SaveItemBasePriceService {
   public List<SaveItemBasePriceResponse> findAllByStoreId(Long userId) {
 
     Owner owner = ownerRepository.findByUserId(userId)
-        .orElseThrow(() -> new CustomException(StaffErrorCode.OWNER_NOT_FOUND));
+        .orElseThrow(() -> new CustomException(OwnerErrorCode.OWNER_NOT_FOUND));
 
     Store store = storeRepository.findByOwnerUserId(owner.getId())
         .orElseThrow(() -> new CustomException(StoreErrorCode.STORE_NOT_FOUND));

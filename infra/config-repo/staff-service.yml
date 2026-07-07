@@ -1,0 +1,16 @@
+# staff-service 전용 설정
+spring:
+  datasource:
+    url: ${STAFF_DB_URL:jdbc:mysql://mysql-staff:3306/staff_db}
+    username: ${STAFF_DB_USERNAME:root}
+    password: ${STAFF_DB_PASSWORD:root}
+
+# strangler 단계: 미추출 도메인은 legacy 모놀리스 내부 API 호출.
+# Phase 3(owner)/4(auth)/5(estimate) 추출 시 해당 url을 제거해 Eureka로 전환한다.
+clients:
+  auth-service:
+    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}
+  owner-service:
+    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}
+  estimate-service:
+    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}

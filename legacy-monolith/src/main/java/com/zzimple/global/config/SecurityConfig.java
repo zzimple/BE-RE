@@ -68,6 +68,9 @@ public class SecurityConfig {
                 ).hasRole("DEVELOPER")
 
                 // 인증 관련 요청 허용
+                // 내부 서비스 간 API (strangler 단계, Docker 내부 네트워크 전용)
+                .requestMatchers("/internal/**").permitAll()
+
                 .requestMatchers("/auth/**", "/oauth2/**").permitAll()
 
                 .requestMatchers("/owner/**", "/users/**").permitAll()

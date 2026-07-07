@@ -11,10 +11,8 @@ import com.zzimple.owner.entity.Owner;
 import com.zzimple.owner.repository.OwnerRepository;
 import com.zzimple.owner.store.entity.Store;
 import com.zzimple.owner.store.repository.StoreRepository;
-import com.zzimple.staff.entity.Staff;
-import com.zzimple.staff.exception.StaffErrorCode;
-import com.zzimple.staff.repository.StaffAssignmentRepository;
-import com.zzimple.staff.repository.StaffRepository;
+import com.zzimple.internal.StaffServiceClient;
+import java.util.Map;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +34,7 @@ public class EstimateController {
   private final OwnerRepository ownerRepository;
   private final StoreRepository storeRepository;
   private final EstimateRepository estimateRepository;
-  private final StaffRepository staffRepository;
-  private final StaffAssignmentRepository staffAssignmentRepository;
+  private final StaffServiceClient staffServiceClient;
 
 //  @GetMapping("/estimate/{estimateNo}")
 //  @Operation(
@@ -74,20 +71,18 @@ public class EstimateController {
         }
 
       } else if (isStaff) {
-        // 직원 권한 확인
-        Staff staff = staffRepository.findByUserId(user.getUserId())
-            .orElseThrow(() -> new CustomException(StaffErrorCode.INVALID_STAFF_ROLE));
+        // 직원 권한 확인 (staff 도메인은 staff-service로 추출됨 - 내부 API 호출)
+        Map<String, Object> staff = staffServiceClient.findStaffByUserId(user.getUserId())
+            .orElseThrow(() -> new AccessDeniedException("직원 정보가 없습니다."));
 
-        if (!staff.getStoreId().equals(storeId)) {
+        Long staffStoreId = ((Number) staff.get("storeId")).longValue();
+        if (!staffStoreId.equals(storeId)) {
           throw new AccessDeniedException("직원: 소속 매장이 아닙니다.");
         }
 
-        // 해당 견적서에 배정된 사람인지 확인 (선택사항)
-        boolean assigned = staffAssignmentRepository
-            .findByEstimateNoAndStaffId(estimateNo, staff.getStaffId())
-            .isPresent();
-
-        if (!assigned) {
+        // 해당 견적서에 배정된 사람인지 확인
+        Long staffId = ((Number) staff.get("staffId")).longValue();
+        if (!staffServiceClient.isAssigned(estimateNo, staffId)) {
           throw new AccessDeniedException("이 견적에 배정되지 않았습니다.");
         }
 

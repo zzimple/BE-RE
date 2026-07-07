@@ -1,0 +1,34 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: staff-service
+  config:
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  datasource:
+    url: ${STAFF_DB_URL:jdbc:mysql://localhost:3308/staff_db}
+    username: ${STAFF_DB_USERNAME:root}
+    password: ${STAFF_DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+# strangler 단계: 아직 추출되지 않은 도메인은 legacy 모놀리스의 내부 API를 호출한다.
+# 각 서비스가 추출되면 해당 url을 비워 Eureka 서비스 디스커버리로 전환한다.
+clients:
+  auth-service:
+    url: ${LEGACY_MONOLITH_URL:http://localhost:8081}
+  owner-service:
+    url: ${LEGACY_MONOLITH_URL:http://localhost:8081}
+  estimate-service:
+    url: ${LEGACY_MONOLITH_URL:http://localhost:8081}

@@ -58,3 +58,64 @@ services:
     depends_on:
       - discovery-server
       - config-server
+
+  mysql-staff:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: staff_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  staff-service:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: staff-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      STAFF_DB_URL: jdbc:mysql://mysql-staff:3306/staff_db
+      LEGACY_MONOLITH_URL: http://legacy-monolith:8081
+    depends_on:
+      - discovery-server
+      - config-server
+      - mysql-staff
+
+  # strangler 단계의 legacy 모놀리스 (미추출 도메인: user/owner/estimate)
+  mysql-legacy:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: zzimple
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+
+  legacy-monolith:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: legacy-monolith
+    environment:
+      SERVER_PORT: "8081"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-legacy:3306/zzimple
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_HOST: redis
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-secret-key-local-dev-secret-key}
+      CLIENTS_STAFF_SERVICE_URL: http://staff-service:8083
+    depends_on:
+      - mysql-legacy
+      - redis

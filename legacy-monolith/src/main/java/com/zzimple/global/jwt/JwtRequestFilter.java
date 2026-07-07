@@ -215,7 +215,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getRequestURI();
     return path.startsWith("/api/auth/")
-        || path.equals("/juso/callback")
+        || path.startsWith("/internal/")
         || path.equals("/users/refresh-token");
   }
 }

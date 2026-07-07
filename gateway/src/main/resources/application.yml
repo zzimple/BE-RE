@@ -31,11 +31,6 @@ spring:
           uri: lb://owner-service
           predicates:
             - Path=/owner/**
-        # strangler: 아직 추출되지 않은 나머지 경로는 legacy 모놀리스로 전달
-        - id: legacy-monolith
-          uri: ${LEGACY_MONOLITH_URL:http://localhost:8081}
-          predicates:
-            - Path=/**
 
 eureka:
   client:
@@ -43,7 +38,7 @@ eureka:
       defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
 
 jwt:
-  # 게이트웨이는 JWT '검증'만 한다. 발급은 auth-service(현재는 legacy)만 수행.
+  # 게이트웨이는 JWT '검증'만 한다. 발급은 auth-service만 수행.
   # 실제 키는 Config Server / 환경변수로 주입
   secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-local-dev-secret-key}
 

@@ -5,8 +5,7 @@ spring:
     username: ${STAFF_DB_USERNAME:root}
     password: ${STAFF_DB_PASSWORD:root}
 
-# strangler 단계: 미추출 도메인은 legacy 모놀리스 내부 API 호출.
-# Phase 3(owner)/4(auth)/5(estimate) 추출 시 해당 url을 제거해 Eureka로 전환한다.
+# 서비스 간 호출은 전부 Eureka 디스커버리 (url 비움)
 clients:
   auth-service:
     # Phase 4: auth-service 추출 완료 - Eureka(lb)로 전환

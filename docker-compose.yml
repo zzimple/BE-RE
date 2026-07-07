@@ -1,5 +1,6 @@
 # 찜플 MSA 로컬 오케스트레이션
-# 단계적으로 서비스가 추가된다 (Phase 0: 인프라 3종만)
+# 인프라: discovery(Eureka)/config-server/gateway + Kafka(KRaft)/Redis/MySQL x4
+# 서비스: auth/owner/staff/estimate/integration (외부 노출은 gateway:8080 뿐)
 services:
   discovery-server:
     build:
@@ -188,38 +189,5 @@ services:
       - config-server
       - mysql-staff
 
-  # strangler 단계의 legacy 모놀리스 (미추출 도메인: estimate)
-  mysql-legacy:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: zzimple
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   redis:
     image: redis:7-alpine
-
-  legacy-monolith:
-    build:
-      context: .
-      dockerfile: infra/Dockerfile
-      args:
-        SERVICE_MODULE: legacy-monolith
-    environment:
-      SERVER_PORT: "8081"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-legacy:3306/zzimple
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATA_REDIS_HOST: redis
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-secret-key-local-dev-secret-key}
-      CLIENTS_STAFF_SERVICE_URL: http://staff-service:8083
-      CLIENTS_OWNER_SERVICE_URL: http://owner-service:8082
-      CLIENTS_AUTH_SERVICE_URL: http://auth-service:8084
-    depends_on:
-      - mysql-legacy
-      - redis

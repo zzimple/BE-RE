@@ -21,6 +21,11 @@ spring:
           uri: lb://staff-service
           predicates:
             - Path=/staff/**,/owner/schedule/**
+        # /owner/my/** 는 estimate-service(사장님 견적함) - owner-service 라우트보다 먼저 선언
+        - id: estimate-service
+          uri: lb://estimate-service
+          predicates:
+            - Path=/estimates/**,/view/**,/guest/**,/owner/my/**
         # /owner/schedule/** 는 위 staff-service 라우트가 먼저 매칭된다 (선언 순서 중요)
         - id: owner-service
           uri: lb://owner-service

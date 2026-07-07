@@ -132,6 +132,36 @@ services:
       - redis
       - kafka
 
+  mysql-estimate:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: estimate_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  estimate-service:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE_MODULE: estimate-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      ESTIMATE_DB_URL: jdbc:mysql://mysql-estimate:3306/estimate_db
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - discovery-server
+      - config-server
+      - mysql-estimate
+      - redis
+      - kafka
+
   mysql-staff:
     image: mysql:8.0
     environment:
@@ -153,7 +183,6 @@ services:
       CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
       STAFF_DB_URL: jdbc:mysql://mysql-staff:3306/staff_db
-      LEGACY_MONOLITH_URL: http://legacy-monolith:8081
     depends_on:
       - discovery-server
       - config-server

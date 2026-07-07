@@ -33,4 +33,5 @@ clients:
     # Phase 3에서 owner-service 추출 완료 - url을 비워 Eureka(lb)로 전환
     url: ${OWNER_SERVICE_URL:}
   estimate-service:
-    url: ${LEGACY_MONOLITH_URL:http://localhost:8081}
+    # Phase 5: estimate-service 추출 완료 - url을 비워 Eureka(lb)로 전환
+    url: ${ESTIMATE_SERVICE_URL:}

@@ -15,4 +15,6 @@ clients:
     # Phase 3: owner-service 추출 완료 - Eureka(lb)로 전환
     url: ""
   estimate-service:
-    url: ${LEGACY_MONOLITH_URL:http://legacy-monolith:8081}
+    # Phase 5: estimate-service 추출 완료 - Eureka(lb)로 전환
+    url: ""
+

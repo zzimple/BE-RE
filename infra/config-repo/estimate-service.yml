@@ -1,0 +1,21 @@
+# estimate-service 전용 설정
+spring:
+  datasource:
+    url: ${ESTIMATE_DB_URL:jdbc:mysql://mysql-estimate:3306/estimate_db}
+    username: ${ESTIMATE_DB_USERNAME:root}
+    password: ${ESTIMATE_DB_PASSWORD:root}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      database: 1
+
+# 전부 Eureka 디스커버리
+clients:
+  auth-service:
+    url: ""
+  owner-service:
+    url: ""
+  staff-service:
+    url: ""
+  integration-service:
+    url: ""

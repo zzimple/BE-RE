@@ -1,0 +1,23 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: integration-service
+  config:
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+# 외부 API 키는 Config Server(infra/config-repo/integration-service.yml)에서 주입된다.
+# 로컬 단독 실행용 기본값(플레이스홀더)
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:changeme}
+openai:
+  api:
+    key: ${OPENAI_API_KEY:changeme}
+juso:
+  front-callback-url: ${JUSO_FRONT_CALLBACK_URL:http://localhost:3000/juso/callback}

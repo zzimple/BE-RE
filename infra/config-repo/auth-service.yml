@@ -1,0 +1,14 @@
+# auth-service 전용 설정
+spring:
+  datasource:
+    url: ${AUTH_DB_URL:jdbc:mysql://mysql-auth:3306/auth_db}
+    username: ${AUTH_DB_USERNAME:root}
+    password: ${AUTH_DB_PASSWORD:root}
+
+# JWT 발급 키 (게이트웨이와 동일 키 - Config Server가 단일 출처)
+jwt:
+  secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-local-dev-secret-key}
+
+clients:
+  owner-service:
+    url: ""

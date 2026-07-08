@@ -1,0 +1,20 @@
+# owner-service 전용 설정
+spring:
+  datasource:
+    url: ${OWNER_DB_URL:jdbc:mysql://mysql-owner:3306/owner_db}
+    username: ${OWNER_DB_USERNAME:root}
+    password: ${OWNER_DB_PASSWORD:root}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      database: 0
+
+# Phase 4: auth-service 추출 완료 - Eureka(lb)로 전환
+clients:
+  auth-service:
+    url: ""
+
+
+# 공공데이터 사업자 상태 조회 API 키
+api:
+  serviceKey: ${BUSINESS_API_SERVICE_KEY:changeme}
